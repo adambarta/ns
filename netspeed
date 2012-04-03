@@ -1,0 +1,67 @@
+#!/bin/bash
+set -e
+
+SOURCE=/proc/net/dev
+DEV="eth"
+WIDTH=100
+CUR=0
+
+echo "set xtics " #tc rgb'white'"
+echo "set ytics " #tc rgb'white'"
+echo "set style data lines"
+echo "set grid"
+echo "set terminal x11 noraise"
+#echo "set terminal dumb"
+#echo "set terminal png x222222 xffffff"
+#echo "set object 1 rectangle from screen 0,0 to screen 1,1 fillcolor rgb 'black' behind"
+echo "set autoscale"
+
+data=(`grep -E "(${DEV})" $SOURCE | tr -s ' ' | cut -d ' ' -f3,11`)
+recv[$CUR]=${data[0]}
+send[$CUR]=${data[1]}
+#recv[$CUR]=0
+#send[$CUR]=0
+
+while true; do
+  data=(`grep -E "(${DEV})" $SOURCE | tr -s ' ' | cut -d ' ' -f3,11`)
+  
+  #echo "data is: recv:"${data[0]}" send:"${data[1]}
+  #echo "0:"$((${data[0]}-$recv))
+  #echo "1:"$((${data[1]}-$send))
+
+  CUR=$(($CUR+1))
+  DIF=$((CUR-$WIDTH))
+
+  #recv[$CUR]=$((${data[0]}-${recv[$(($CUR-1))]}))
+  #send[$CUR]=$((${data[1]}-${send[$(($CUR-1))]}))
+  recv[$CUR]=${data[0]}
+  send[$CUR]=${data[1]}
+
+  echo "set xrange[$DIF:$CUR]"
+  echo "plot \"-\" title 'recv', \"-\" title 'send'"
+
+  for ((i=$DIF; i<=$CUR; i++))
+  do
+    if [ $i -gt 0 ];
+    then
+      rr=$((${recv[$i]}-${recv[$(($i-1))]}))
+      echo "$i $rr Bps"
+    fi
+  done
+  echo "e"
+
+  for ((i=$DIF; i<=$CUR; i++))
+  do
+    if [ $i -gt 0 ];
+    then
+      ss=$((${send[$i]}-${send[$(($i-1))]}))
+      echo "$i $ss Bps"
+    fi
+  done
+  echo "e"
+
+  sleep 1;
+
+done
+
+
