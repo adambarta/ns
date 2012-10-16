@@ -2,8 +2,8 @@
 set -e
 
 SOURCE=/proc/net/dev
-DEV="eth"
-WIDTH=100
+DEV="wlan"
+WIDTH=500
 CUR=0
 
 echo "set xtics " #tc rgb'white'"
@@ -38,14 +38,14 @@ while true; do
   send[$CUR]=${data[1]}
 
   echo "set xrange[$DIF:$CUR]"
-  echo "plot \"-\" title 'recv', \"-\" title 'send'"
+  echo "plot \"-\" title 'recv $((${recv[$CUR]}-${recv[$(($CUR-1))]}))', \"-\" title 'send $((${send[$CUR]}-${send[$(($CUR-1))]}))'"
 
   for ((i=$DIF; i<=$CUR; i++))
   do
     if [ $i -gt 0 ];
     then
       rr=$((${recv[$i]}-${recv[$(($i-1))]}))
-      echo "$i $rr Bps"
+      echo "$i $rr"
     fi
   done
   echo "e"
@@ -55,7 +55,7 @@ while true; do
     if [ $i -gt 0 ];
     then
       ss=$((${send[$i]}-${send[$(($i-1))]}))
-      echo "$i $ss Bps"
+      echo "$i $ss"
     fi
   done
   echo "e"
